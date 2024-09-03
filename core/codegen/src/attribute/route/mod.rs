@@ -143,7 +143,7 @@ fn request_guard_decl(guard: &Guard) -> TokenStream {
 
                 return #Outcome::Forward((#__data, __e));
             },
-            #[allow(unreachable_code)]
+            #[allow(unreachable_code, unreachable_patterns)]
             #Outcome::Error((__c, __e)) => {
                 ::rocket::trace::info!(
                     name: "failure",
