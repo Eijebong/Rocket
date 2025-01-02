@@ -23,8 +23,10 @@ type Result<T, E = crate::Error> = std::result::Result<T, E>;
 
 impl Rocket<Orbit> {
     #[tracing::instrument("request", skip_all, fields(
-        method = %parts.method,
+        http.request.method = %parts.method,
         uri = %parts.uri,
+        otel.name = tracing::field::Empty,
+        message = tracing::field::Empty,
         autohandled
     ))]
     async fn service<T: for<'a> Into<RawStream<'a>>>(
