@@ -18,6 +18,7 @@ use crate::data::{IoStream, RawStream};
 use crate::util::{spawn_inspect, FutureExt, ReaderStream};
 use crate::http::Status;
 use crate::trace::{Trace, TraceAll};
+use sentry::{Hub, SentryFutureExt};
 
 type Result<T, E = crate::Error> = std::result::Result<T, E>;
 
@@ -172,6 +173,7 @@ impl Rocket<Orbit> {
         let (listener, server) = (Arc::new(listener.bounced()), Arc::new(builder));
         while let Some(accept) = listener.accept().race(self.shutdown()).await.left().transpose()? {
             let (listener, rocket, server) = (listener.clone(), self.clone(), server.clone());
+            let hub = Hub::with(|hub| Hub::new_from_top(hub));
             spawn_inspect(|e| log_server_error(&**e), async move {
                 let conn = listener.connect(accept).race_io(rocket.shutdown()).await?;
                 let meta = ConnectionMeta::new(conn.endpoint(), conn.certificates());
@@ -190,7 +192,7 @@ impl Rocket<Orbit> {
                         server.await
                     },
                 }
-            });
+            }.bind_hub(hub));
         }
 
         Ok(())
